@@ -1,0 +1,654 @@
+import React, { useState } from 'react';
+import { Dumbbell, Plus, Flame, Calendar, TrendingUp, Trash2, X } from 'lucide-react';
+
+const EXERCISE_LIBRARY = [
+  { name: 'Rope Pull', icon: '🪢' },
+  { name: 'Chest Press', icon: '💪' },
+  { name: 'Mid Row', icon: '🚣' },
+  { name: 'Squat', icon: '🦵' },
+  { name: 'Butterfly Chest', icon: '🦋' },
+  { name: 'Calf Press', icon: '🦶' },
+  { name: 'Biceps Curl', icon: '💪' },
+  { name: 'Reverse Curl', icon: '🔄' },
+  { name: 'Farmer Walk', icon: '🚶' },
+  { name: 'Overhead Tricep Pull', icon: '🏋️' },
+  { name: 'Traps Curl', icon: '🤷' },
+];
+
+const PINK = '#FF5A5F';
+const BLUE = '#2B4FB8';
+
+function GrainTexture() {
+  return (
+    <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', opacity: 0.18, mixBlendMode: 'multiply', zIndex: 50 }}>
+      <filter id="grain">
+        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch" />
+        <feColorMatrix type="saturate" values="0" />
+      </filter>
+      <rect width="100%" height="100%" filter="url(#grain)" />
+    </svg>
+  );
+}
+
+function Stamp({ children, color, rotate, style }) {
+  return (
+    <div style={{
+      display: 'inline-block',
+      border: `3px solid ${color}`,
+      padding: '4px 14px',
+      transform: `rotate(${rotate}deg)`,
+      color: color,
+      fontWeight: 900,
+      fontSize: '13px',
+      letterSpacing: '1.5px',
+      textTransform: 'uppercase',
+      ...style,
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function ExerciseRow({ entry, index, onUpdate, onRemove, unit }) {
+  const updateSet = (setIdx, field, value) => {
+    const newSets = [...entry.sets];
+    newSets[setIdx] = { ...newSets[setIdx], [field]: value };
+    onUpdate(index, { ...entry, sets: newSets });
+  };
+
+  const addSet = () => {
+    onUpdate(index, { ...entry, sets: [...entry.sets, { weight: '', reps: '', unit: unit }] });
+  };
+
+  const removeSet = (setIdx) => {
+    if (entry.sets.length > 1) {
+      onUpdate(index, { ...entry, sets: entry.sets.filter((_, i) => i !== setIdx) });
+    }
+  };
+
+  return (
+    <div style={{
+      background: '#F5F0E6',
+      border: `3px solid ${BLUE}`,
+      padding: '16px',
+      marginBottom: '14px',
+      position: 'relative',
+      boxShadow: `4px 4px 0 ${PINK}`,
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', gap: '8px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '28px' }}>{entry.exercise.icon}</span>
+          <div>
+            <div style={{ fontWeight: 900, fontSize: '18px', color: BLUE, textTransform: 'uppercase', letterSpacing: '0.5px', lineHeight: 1.1 }}>
+              {entry.exercise.name}
+            </div>
+            <div style={{ fontSize: '11px', color: PINK, fontWeight: 700, letterSpacing: '1px', marginTop: '2px' }}>
+              {entry.sets.length} SETS
+            </div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <select
+            value={entry.unit || unit}
+            onChange={(e) => onUpdate(index, { ...entry, unit: e.target.value })}
+            style={{
+              border: `2px solid ${PINK}`,
+              background: '#FFFEF8',
+              fontSize: '12px',
+              fontWeight: 700,
+              color: BLUE,
+              padding: '4px 8px',
+              cursor: 'pointer',
+              outline: 'none',
+              fontFamily: 'inherit',
+            }}
+          >
+            <option value="KG">KG</option>
+            <option value="LB">LB</option>
+          </select>
+          <button
+            onClick={() => onRemove(index)}
+            style={{
+              background: 'none',
+              border: `2px solid ${PINK}`,
+              color: PINK,
+              cursor: 'pointer',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '6px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', color: BLUE }}>
+        <div style={{ width: '36px' }}>SET</div>
+        <div style={{ flex: 1 }}>WEIGHT</div>
+        <div style={{ flex: 1 }}>REPS</div>
+        <div style={{ width: '28px' }}></div>
+      </div>
+
+      {entry.sets.map((set, setIdx) => (
+        <div key={setIdx} style={{ display: 'flex', gap: '6px', marginBottom: '6px', alignItems: 'center' }}>
+          <div style={{
+            width: '36px',
+            textAlign: 'center',
+            background: PINK,
+            color: '#F5F0E6',
+            fontWeight: 900,
+            fontSize: '14px',
+            padding: '8px 0',
+          }}>
+            {setIdx + 1}
+          </div>
+          <input
+            type="number"
+            value={set.weight}
+            onChange={(e) => updateSet(setIdx, 'weight', e.target.value)}
+            placeholder="0"
+            style={{
+              flex: 1,
+              border: `2px solid ${BLUE}`,
+              background: '#FFFEF8',
+              padding: '8px',
+              fontSize: '16px',
+              fontWeight: 700,
+              color: BLUE,
+              outline: 'none',
+              fontFamily: 'inherit',
+            }}
+          />
+          <select
+            value={set.unit || unit}
+            onChange={(e) => updateSet(setIdx, 'unit', e.target.value)}
+            style={{
+              width: '50px',
+              border: `2px solid ${BLUE}`,
+              background: '#FFFEF8',
+              padding: '8px 4px',
+              fontSize: '14px',
+              fontWeight: 700,
+              color: BLUE,
+              outline: 'none',
+              fontFamily: 'inherit',
+            }}
+          >
+            <option value="KG">KG</option>
+            <option value="LB">LB</option>
+          </select>
+          <input
+            type="number"
+            value={set.reps}
+            onChange={(e) => updateSet(setIdx, 'reps', e.target.value)}
+            placeholder="0"
+            style={{
+              flex: 1,
+              border: `2px solid ${BLUE}`,
+              background: '#FFFEF8',
+              padding: '8px',
+              fontSize: '16px',
+              fontWeight: 700,
+              color: BLUE,
+              outline: 'none',
+              fontFamily: 'inherit',
+            }}
+          />
+          <button
+            onClick={() => removeSet(setIdx)}
+            style={{
+              width: '28px',
+              height: '36px',
+              background: 'none',
+              border: `2px solid ${PINK}`,
+              color: PINK,
+              cursor: entry.sets.length > 1 ? 'pointer' : 'not-allowed',
+              opacity: entry.sets.length > 1 ? 1 : 0.3,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0,
+            }}
+          >
+            <X size={12} />
+          </button>
+        </div>
+      ))}
+
+      <button
+        onClick={addSet}
+        style={{
+          width: '100%',
+          border: `2px dashed ${BLUE}`,
+          background: 'transparent',
+          color: BLUE,
+          padding: '6px',
+          cursor: 'pointer',
+          fontWeight: 900,
+          fontSize: '11px',
+          textTransform: 'uppercase',
+          letterSpacing: '1.5px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '6px',
+          fontFamily: 'inherit',
+        }}
+      >
+        <Plus size={14} /> Add Set
+      </button>
+    </div>
+  );
+}
+
+function ExercisePicker({ open, onClose, onSelect }) {
+  if (!open) return null;
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        top: 0, left: 0, right: 0, bottom: 0,
+        background: 'rgba(0,0,0,0.5)',
+        zIndex: 100,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: '#F5F0E6',
+          border: `4px solid ${BLUE}`,
+          padding: '24px',
+          maxWidth: '500px',
+          width: '100%',
+          maxHeight: '80vh',
+          overflowY: 'auto',
+          position: 'relative',
+          boxShadow: `8px 8px 0 ${PINK}`,
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ fontSize: '22px', fontWeight: 900, color: BLUE, textTransform: 'uppercase', margin: 0, letterSpacing: '1px' }}>
+            Pick Exercise
+          </h3>
+          <button onClick={onClose} style={{ background: 'none', border: `2px solid ${PINK}`, color: PINK, cursor: 'pointer', padding: '4px', display: 'flex' }}>
+            <X size={16} />
+          </button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '10px' }}>
+          {EXERCISE_LIBRARY.map((ex) => (
+            <button
+              key={ex.name}
+              onClick={() => { onSelect(ex); onClose(); }}
+              style={{
+                border: `2px solid ${BLUE}`,
+                background: '#FFFEF8',
+                padding: '14px 8px',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '6px',
+                fontFamily: 'inherit',
+                transition: 'transform 0.1s',
+              }}
+              onMouseDown={(e) => e.currentTarget.style.transform = 'translate(2px, 2px)'}
+              onMouseUp={(e) => e.currentTarget.style.transform = 'translate(0, 0)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translate(0, 0)'}
+            >
+              <span style={{ fontSize: '28px' }}>{ex.icon}</span>
+              <span style={{ fontSize: '11px', fontWeight: 900, color: BLUE, textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'center', lineHeight: 1.2 }}>
+                {ex.name}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function WorkoutZineTracker() {
+  const [unit, setUnit] = useState('KG');
+  const [bodyWeight, setBodyWeight] = useState('');
+  const [entries, setEntries] = useState([
+    { exercise: EXERCISE_LIBRARY[0], sets: [{ weight: '40', reps: '12', unit: 'KG' }, { weight: '45', reps: '10', unit: 'KG' }] },
+    { exercise: EXERCISE_LIBRARY[3], sets: [{ weight: '60', reps: '8', unit: 'KG' }] },
+  ]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+
+  const totalVolume = entries.reduce((acc, e) =>
+    acc + e.sets.reduce((s, set) => s + (parseFloat(set.weight) || 0) * (parseInt(set.reps) || 0), 0), 0
+  );
+  const totalSets = entries.reduce((acc, e) => acc + e.sets.length, 0);
+  const totalReps = entries.reduce((acc, e) =>
+    acc + e.sets.reduce((s, set) => s + (parseInt(set.reps) || 0), 0), 0
+  );
+
+  const addExercise = (exercise) => {
+    setEntries([...entries, { exercise, sets: [{ weight: '', reps: '' }] }]);
+  };
+
+  const updateEntry = (index, data) => {
+    const newEntries = [...entries];
+    newEntries[index] = data;
+    setEntries(newEntries);
+  };
+
+  const removeEntry = (index) => {
+    setEntries(entries.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div style={{
+      width: '100%',
+      minHeight: '100vh',
+      background: '#F5F0E6',
+      fontFamily: '"Courier New", monospace',
+      position: 'relative',
+      overflow: 'hidden',
+      color: BLUE,
+    }}>
+      <GrainTexture />
+
+      {/* Decorative offset circles */}
+      <div style={{ position: 'absolute', top: '-60px', right: '-40px', width: '200px', height: '200px', borderRadius: '50%', background: PINK, opacity: 0.15, zIndex: 0 }} />
+      <div style={{ position: 'absolute', top: '-50px', right: '-30px', width: '200px', height: '200px', borderRadius: '50%', border: `3px solid ${BLUE}`, opacity: 0.3, zIndex: 0 }} />
+
+      <div style={{ position: 'relative', zIndex: 10, maxWidth: '720px', margin: '0 auto', padding: '24px 20px 60px' }}>
+
+        {/* Header */}
+        <div style={{ marginBottom: '24px', position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <div style={{
+              background: PINK,
+              color: '#F5F0E6',
+              padding: '4px 10px',
+              fontWeight: 900,
+              fontSize: '11px',
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+              transform: 'rotate(-2deg)',
+            }}>
+              Vol. 01
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 700, color: BLUE, letterSpacing: '1px' }}>
+              <Calendar size={12} /> {today}
+            </div>
+          </div>
+
+          <h1 style={{
+            fontSize: 'clamp(36px, 9vw, 64px)',
+            fontWeight: 900,
+            lineHeight: 0.9,
+            margin: 0,
+            color: BLUE,
+            textTransform: 'uppercase',
+            letterSpacing: '-1px',
+            position: 'relative',
+          }}>
+            WORKOUT
+            <span style={{
+              display: 'block',
+              color: PINK,
+              transform: 'rotate(-1.5deg)',
+              marginLeft: '20px',
+              marginTop: '4px',
+            }}>
+              ZINE
+            </span>
+          </h1>
+
+          <div style={{ position: 'absolute', top: '10px', right: '0', zIndex: 5 }}>
+            <Stamp color={BLUE} rotate={8}>TRACKER</Stamp>
+          </div>
+
+          <p style={{
+            fontSize: '13px',
+            color: BLUE,
+            marginTop: '12px',
+            maxWidth: '400px',
+            lineHeight: 1.5,
+            fontWeight: 600,
+            opacity: 0.8,
+          }}>
+            Log your lifts. Track your gains. Printed daily on the press of your own discipline.
+          </p>
+        </div>
+
+        {/* Stats Bar */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '8px',
+          marginBottom: '20px',
+        }}>
+          <div style={{
+            background: BLUE,
+            color: '#F5F0E6',
+            padding: '14px 10px',
+            textAlign: 'center',
+            transform: 'rotate(-1deg)',
+            boxShadow: `3px 3px 0 ${PINK}`,
+          }}>
+            <div style={{ fontSize: '24px', fontWeight: 900 }}>{totalSets}</div>
+            <div style={{ fontSize: '9px', letterSpacing: '1.5px', textTransform: 'uppercase', opacity: 0.8 }}>Sets</div>
+          </div>
+          <div style={{
+            background: PINK,
+            color: '#F5F0E6',
+            padding: '14px 10px',
+            textAlign: 'center',
+            transform: 'rotate(1deg)',
+            boxShadow: `3px 3px 0 ${BLUE}`,
+          }}>
+            <div style={{ fontSize: '24px', fontWeight: 900 }}>{totalReps}</div>
+            <div style={{ fontSize: '9px', letterSpacing: '1.5px', textTransform: 'uppercase', opacity: 0.8 }}>Reps</div>
+          </div>
+          <div style={{
+            background: '#F5F0E6',
+            border: `3px solid ${BLUE}`,
+            color: BLUE,
+            padding: '14px 10px',
+            textAlign: 'center',
+            transform: 'rotate(-0.5deg)',
+            boxShadow: `3px 3px 0 ${PINK}`,
+          }}>
+            <div style={{ fontSize: '24px', fontWeight: 900 }}>{totalVolume}</div>
+            <div style={{ fontSize: '9px', letterSpacing: '1.5px', textTransform: 'uppercase', opacity: 0.8 }}>Vol {unit}</div>
+          </div>
+        </div>
+
+        {/* Body Weight + Unit Selector */}
+        <div style={{
+          display: 'flex',
+          gap: '10px',
+          marginBottom: '20px',
+          flexWrap: 'wrap',
+        }}>
+          <div style={{
+            flex: '1 1 200px',
+            border: `3px solid ${BLUE}`,
+            background: '#FFFEF8',
+            padding: '12px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+          }}>
+            <TrendingUp size={20} style={{ color: PINK, flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <label style={{ display: 'block', fontSize: '9px', fontWeight: 900, letterSpacing: '1.5px', textTransform: 'uppercase', color: BLUE, marginBottom: '2px' }}>
+                Body Weight
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <input
+                  type="number"
+                  value={bodyWeight}
+                  onChange={(e) => setBodyWeight(e.target.value)}
+                  placeholder="0"
+                  style={{
+                    border: 'none',
+                    borderBottom: `2px solid ${PINK}`,
+                    background: 'transparent',
+                    fontSize: '20px',
+                    fontWeight: 900,
+                    color: BLUE,
+                    outline: 'none',
+                    width: '100%',
+                    padding: '2px 0',
+                    fontFamily: 'inherit',
+                  }}
+                />
+                <span style={{ fontSize: '12px', fontWeight: 900, color: PINK, flexShrink: 0 }}>KG</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{
+            border: `3px solid ${BLUE}`,
+            background: '#FFFEF8',
+            padding: '12px 14px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            minWidth: '120px',
+          }}>
+            <label style={{ fontSize: '9px', fontWeight: 900, letterSpacing: '1.5px', textTransform: 'uppercase', color: BLUE, marginBottom: '4px' }}>
+              Unit
+            </label>
+            <select
+              value={unit}
+              onChange={(e) => setUnit(e.target.value)}
+              style={{
+                border: `2px solid ${PINK}`,
+                background: '#F5F0E6',
+                fontSize: '16px',
+                fontWeight: 900,
+                color: BLUE,
+                padding: '4px 8px',
+                cursor: 'pointer',
+                outline: 'none',
+                fontFamily: 'inherit',
+              }}
+            >
+              <option value="KG">KG</option>
+              <option value="LB">LB</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Today's Session Label */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          marginBottom: '16px',
+        }}>
+          <div style={{
+            background: BLUE,
+            color: '#F5F0E6',
+            padding: '6px 14px',
+            fontWeight: 900,
+            fontSize: '14px',
+            letterSpacing: '2px',
+            textTransform: 'uppercase',
+            transform: 'rotate(-1deg)',
+          }}>
+            Today's Session
+          </div>
+          <div style={{ flex: 1, height: '3px', background: PINK }} />
+          <Flame size={20} style={{ color: PINK }} />
+        </div>
+
+        {/* Exercise Entries */}
+        <div>
+          {entries.length === 0 && (
+            <div style={{
+              border: `3px dashed ${BLUE}`,
+              padding: '40px 20px',
+              textAlign: 'center',
+              color: BLUE,
+              fontWeight: 700,
+              fontSize: '14px',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+            }}>
+              No exercises yet — add one to start logging!
+            </div>
+          )}
+          {entries.map((entry, index) => (
+            <ExerciseRow
+              key={index}
+              entry={entry}
+              index={index}
+              onUpdate={updateEntry}
+              onRemove={removeEntry}
+              unit={unit}
+            />
+          ))}
+        </div>
+
+        {/* Add Exercise Button */}
+        <button
+          onClick={() => setPickerOpen(true)}
+          style={{
+            width: '100%',
+            border: `3px solid ${BLUE}`,
+            background: PINK,
+            color: '#F5F0E6',
+            padding: '16px',
+            cursor: 'pointer',
+            fontWeight: 900,
+            fontSize: '16px',
+            textTransform: 'uppercase',
+            letterSpacing: '2px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            fontFamily: 'inherit',
+            boxShadow: `4px 4px 0 ${BLUE}`,
+            transition: 'transform 0.1s',
+          }}
+          onMouseDown={(e) => { e.currentTarget.style.transform = 'translate(4px, 4px)'; e.currentTarget.style.boxShadow = '0 0 0 transparent'; }}
+          onMouseUp={(e) => { e.currentTarget.style.transform = 'translate(0, 0)'; e.currentTarget.style.boxShadow = `4px 4px 0 ${BLUE}`; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'translate(0, 0)'; e.currentTarget.style.boxShadow = `4px 4px 0 ${BLUE}`; }}
+        >
+          <Plus size={20} /> Add Exercise
+        </button>
+
+        {/* Footer */}
+        <div style={{
+          marginTop: '40px',
+          paddingTop: '20px',
+          borderTop: `2px dashed ${BLUE}`,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '10px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10px', fontWeight: 700, color: BLUE, letterSpacing: '1px', textTransform: 'uppercase' }}>
+            <Dumbbell size={14} style={{ color: PINK }} />
+            Press · Lift · Repeat
+          </div>
+          <Stamp color={PINK} rotate={-3} style={{ fontSize: '10px' }}>No Pain No Zine</Stamp>
+        </div>
+      </div>
+
+      <ExercisePicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={addExercise}
+      />
+    </div>
+  );
+}
